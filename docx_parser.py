@@ -2,7 +2,7 @@
 #
 # docx_parser.py
 #
-# VERSION: 0.0.1
+# VERSION: 0.0.3
 # UPDATED: 2021-09-29
 #
 ##############################################################################
@@ -46,6 +46,54 @@ def find_word_files(d, k=""):
     my_files = glob.glob(os.path.join(d, my_search))
     return my_files
 
+
+def list_paragraph_styles(d):
+    """
+    Name:     list_paragraph_styles
+    Inputs:   docx.document.Document, open word document
+    Output:   dict, style_id (keys) with name and counts (keys) found
+    Features: Returns a list of all the paragraph styles found in given doc
+    """
+    style_dict = {}
+    para_num = len(my_doc.paragraphs)
+    for i in range(para_num):
+        para = my_doc.paragraphs[i]
+        if para.style.style_id not in style_dict:
+            style_dict[para.style.style_id] = {
+                'name': para.style.name,
+                'count': 1
+            }
+        else:
+            style_dict[para.style.style_id]['count'] += 1
+    return style_dict
+
+
+def parse_file(d, styleid):
+    """
+    Name:     parse_file
+    Inputs:   - docx.document.Document, an open Word document (d)
+              - str, the Word paragraph style ID to break on (styleid)
+    Features: Finds paragraphs of the given style and breaks it into a
+              separate document
+    TODO:     - include a user-defined output folder option
+              - include a user-defined output file namning scheme
+    """
+    # Initialize output document (i.e., the chapter in a book to be written)
+    my_out = None
+    para_num = len(my_doc.paragraphs)
+    j = 1
+    for i in range(para_num):
+        para = my_doc.paragraphs[i]
+        # Split document on given style
+        if para.style.style_id == styleid:
+            if my_out:
+                my_out.save(my_name)
+            my_name = "DOCUMENT_%d.docx" % (j)
+            j += 1
+            my_out = docx.Document()
+        if my_out:
+            my_out.add_paragraph(para.text, para.style.name)
+
 ##############################################################################
 # MAIN
 ##############################################################################
@@ -62,23 +110,10 @@ else:
     print("Failed to find docx. Please check and try again.")
     my_file = None
 
-# Step 2 - Opening the document, find sections, and parse the original file
+# Step 2 - Open the document, define break style, and parse
 if my_file:
     my_doc = docx.Document(my_file)
-    # TODO: move to function
-    para_num = len(my_doc.paragraphs)
-    my_out = None
-    for i in range(para_num):
-        para = my_doc.paragraphs[i]
-        # Split document on style "Heading1"
-        # TODO: allow for user-defined style
-        # TODO: create a list of built-in style names and/or style IDs
-        if para.style.style_id == "Heading1":
-            if my_out:
-                # TODO: include a user-defined output folder
-                my_out.save(my_name)
-            # TODO: regular expressions for searching chapter numbers ?
-            my_name = "DOCUMENT_%d.docx" % (i+1)
-            my_out = docx.Document()
-        if my_out:
-            my_out.add_paragraph(para.text, para.style.name)
+    my_styles = list_paragraph_styles(my_doc)
+    bstyle = "Heading1"
+    if bstyle in my_styles.keys():
+        parse_file(my_doc, bstyle)
