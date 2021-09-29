@@ -77,6 +77,7 @@ def parse_file(d, styleid):
               separate document
     TODO:     - include a user-defined output folder option
               - include a user-defined output file namning scheme
+              - include character formatting (i.e., within paragraphs)
     """
     # Initialize output document (i.e., the chapter in a book to be written)
     my_out = None
@@ -97,10 +98,13 @@ def parse_file(d, styleid):
 ##############################################################################
 # MAIN
 ##############################################################################
+# User inputs:
+my_dir = "examples"   # where to look for the input document
+my_key = "example"    # keyword for finding the right input document
+br_style = "Heading1" # the paragraph style used to parse the input document
+
 # Step 1: find the input word files
-# TODO: allow for user-defined folders
-my_dir = "examples"
-my_files = find_word_files(my_dir, "example")
+my_files = find_word_files(my_dir, my_key)
 if len(my_files) == 1:
     my_file = my_files[0]
 elif len(my_files) > 1:
@@ -114,6 +118,5 @@ else:
 if my_file:
     my_doc = docx.Document(my_file)
     my_styles = list_paragraph_styles(my_doc)
-    bstyle = "Heading1"
     if bstyle in my_styles.keys():
-        parse_file(my_doc, bstyle)
+        parse_file(my_doc, br_style)
