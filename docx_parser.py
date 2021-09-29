@@ -30,17 +30,34 @@ import glob
 import re
 
 import docx
-from docx.enum.section import WD_SECTION
+
+##############################################################################
+# FUNCTIONS
+##############################################################################
+def find_word_files(d, k=""):
+    """
+    Name:     find_word_files
+    Inputs:   - str, file path (d)
+              - str, keyword(s) in the file to search (k)
+    Outputs:  List
+    Features: Searches the given directory for word files
+    """
+    my_search = "*%s*.docx" % (k)
+    my_files = glob.glob(os.path.join(d, my_search))
+    return my_files
 
 ##############################################################################
 # MAIN
 ##############################################################################
 # Step 1: find the input word files
-# TODO: allow for user-defined folders and search strings for file names
+# TODO: allow for user-defined folders
 my_dir = "examples"
-my_files = glob.glob(os.path.join(my_dir, "*.docx"))
+my_files = find_word_files(my_dir, "example")
 if len(my_files) == 1:
     my_file = my_files[0]
+elif len(my_files) > 1:
+    print("Found several word files; "
+          "please use keywords to specify the one you want.")
 else:
     print("Failed to find docx. Please check and try again.")
     my_file = None
