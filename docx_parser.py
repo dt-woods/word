@@ -2,7 +2,7 @@
 #
 # docx_parser.py
 #
-# VERSION: 0.0.4
+# VERSION: 1.0.0
 # UPDATED: 2021-09-30
 #
 ##############################################################################
@@ -27,7 +27,6 @@
 ##############################################################################
 import os
 import glob
-import re
 
 import docx
 
@@ -68,6 +67,28 @@ def list_paragraph_styles(d):
     return style_dict
 
 
+def match_char_style(a, b):
+    """
+    Name:     match_char_style
+    Inputs:   - docx.text.run.Run, run from original document (a)
+              - docx.text.run.Run, run for new document (b)
+    Outputs:  None
+    Features: Returns a run object with the same font styles
+    TODO:     - go into the font setting of the paragraph run and match at
+                this level (see references)
+
+    References:
+    - https://python-docx.readthedocs.io/en/latest/api/text.html#font-objects
+    """
+    # First pass, just match "bold," "italic," and "underline" at run-level
+    if a.bold:
+        b.bold = True
+    if a.italic:
+        b.italic = True
+    if a.underline:
+        b.underline = True
+
+
 def parse_file(d, styleid):
     """
     Name:     parse_file
@@ -93,12 +114,13 @@ def parse_file(d, styleid):
             j += 1
             my_out = docx.Document()
         if my_out:
-            my_out.add_paragraph(para.text, para.style.name)
             # Create a new empty paragraph, then iterate over paragraph runs
             # NOTE: every paragraph has at least one run
-            #out_p = my_out.add_paragraph(text="", style=para.style.name)
-            #for p_run in para.runs:
-            #    out_p.add_run(text = p_run.text, style = p_run.style.name)
+            out_p = my_out.add_paragraph(text="", style=para.style.name)
+            for p_run in para.runs:
+                out_r = out_p.add_run(
+                    text = p_run.text, style = p_run.style.name)
+                match_char_style(p_run, out_r)
     # Save the last chapter
     my_out.save(my_name)
 
