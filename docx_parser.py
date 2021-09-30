@@ -2,8 +2,8 @@
 #
 # docx_parser.py
 #
-# VERSION: 0.0.3
-# UPDATED: 2021-09-29
+# VERSION: 0.0.4
+# UPDATED: 2021-09-30
 #
 ##############################################################################
 # PUBLIC DOMAIN NOTICE                                                       #
@@ -118,5 +118,5 @@ else:
 if my_file:
     my_doc = docx.Document(my_file)
     my_styles = list_paragraph_styles(my_doc)
-    if bstyle in my_styles.keys():
+    if br_style in my_styles.keys():
         parse_file(my_doc, br_style)
