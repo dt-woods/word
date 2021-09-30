@@ -94,6 +94,13 @@ def parse_file(d, styleid):
             my_out = docx.Document()
         if my_out:
             my_out.add_paragraph(para.text, para.style.name)
+            # Create a new empty paragraph, then iterate over paragraph runs
+            # NOTE: every paragraph has at least one run
+            #out_p = my_out.add_paragraph(text="", style=para.style.name)
+            #for p_run in para.runs:
+            #    out_p.add_run(text = p_run.text, style = p_run.style.name)
+    # Save the last chapter
+    my_out.save(my_name)
 
 ##############################################################################
 # MAIN
