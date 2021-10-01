@@ -2,7 +2,7 @@
 #
 # docx_utils.py
 #
-# VERSION: 0.0.0
+# VERSION: 0.0.1
 # UPDATED: 2021-10-01
 #
 ##############################################################################
@@ -53,9 +53,9 @@ def list_paragraph_styles(d):
     Features: Returns a list of all the paragraph styles found in given doc
     """
     style_dict = {}
-    para_num = len(my_doc.paragraphs)
+    para_num = len(d.paragraphs)
     for i in range(para_num):
-        para = my_doc.paragraphs[i]
+        para = d.paragraphs[i]
         if para.style.style_id not in style_dict:
             style_dict[para.style.style_id] = {
                 'name': para.style.name,
