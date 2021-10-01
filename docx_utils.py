@@ -2,7 +2,7 @@
 #
 # docx_utils.py
 #
-# VERSION: 0.0.1
+# VERSION: 0.1.0
 # UPDATED: 2021-10-01
 #
 ##############################################################################
@@ -72,7 +72,7 @@ def match_char_style(a, b):
     Inputs:   - docx.text.run.Run, run from original document (a)
               - docx.text.run.Run, run for new document (b)
     Outputs:  None
-    Features: Returns a run object with the same font styles
+    Features: Edits a run object with the same font styles
     TODO:     - go into the font setting of the paragraph run and match at
                 this level (see references)
 
@@ -86,3 +86,23 @@ def match_char_style(a, b):
         b.italic = True
     if a.underline:
         b.underline = True
+
+
+def match_sect_properties(a, b):
+    """
+    Name:     match_sect_properties
+    Inputs:   - docx.section.Section, given section to copy from (a)
+              - docx.section.Section, section to apply properties to (b)
+    Outputs:  None
+    Features: Edits a section object to match the properties of given section
+
+    Reference:
+    https://python-docx.readthedocs.io/en/latest/user/sections.html
+    """
+    b.page_width = a.page_width
+    b.page_height = a.page_height
+    b.orientation = a.orientation
+    b.left_margin = a.left_margin
+    b.top_margin = a.top_margin
+    b.right_margin = a.right_margin
+    b.bottom_margin = a.bottom_margin
