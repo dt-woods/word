@@ -2,7 +2,7 @@
 #
 # docx_parser.py
 #
-# VERSION: 1.2.0
+# VERSION: 1.3.0
 # UPDATED: 2021-10-01
 #
 ##############################################################################
@@ -33,6 +33,8 @@ import docx
 from docx_utils import find_word_files
 from docx_utils import list_paragraph_styles
 from docx_utils import match_char_style
+from docx_utils import match_sect_properties
+
 
 ##############################################################################
 # FUNCTIONS
@@ -43,7 +45,9 @@ def parse_file(d, styleid):
     Inputs:   - docx.document.Document, an open Word document (d)
               - str, the Word paragraph style ID to break on (styleid)
     Features: Finds paragraphs of the given style and breaks it into a
-              separate document
+              separate document, preserving character formats (e.g., bold)
+              and document properties (e.g., margins). There is no known way
+              to match a paragraph to its section, which a known issue.
     TODO:     - include a user-defined output folder option
               - include a user-defined output file naming scheme
     """
@@ -58,12 +62,18 @@ def parse_file(d, styleid):
             my_name = "DOCUMENT_%d.docx" % (j)
             j += 1
             my_out = docx.Document()
+            out_s = my_out.sections[0]
+            match_sect_properties(d.sections[0], out_s)
         if para.style.style_id == styleid:
             if my_out:
                 my_out.save(my_name)
             my_name = "DOCUMENT_%d.docx" % (j)
             j += 1
             my_out = docx.Document()
+            out_s = my_out.sections[0]
+            # Assumes no changes in section properties
+            # (i.e., paragraph i section properties are all the same)
+            match_sect_properties(d.sections[0], out_s)
         if my_out:
             # Create a new empty paragraph, then iterate over paragraph runs
             # NOTE: every paragraph has at least one run
