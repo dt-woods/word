@@ -89,7 +89,7 @@ def merge_files(d_list, sbreak):
 my_dir = "."            # where to look for the input document
 my_key = "DOCUMENT_"    # keyword for finding the right input document
 sect_break = WD_SECTION.NEW_PAGE   # section break type between merged files
-out_file = "{}_ALL.docx".format(my_key)
+out_file = "{}_ALL.docx".format(my_key.rstrip("_"))
 
 # Step 1: find the input word files
 my_files = find_word_files(my_dir, my_key)
