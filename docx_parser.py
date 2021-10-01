@@ -2,7 +2,7 @@
 #
 # docx_parser.py
 #
-# VERSION: 1.1.0
+# VERSION: 1.2.0
 # UPDATED: 2021-10-01
 #
 ##############################################################################
@@ -49,11 +49,15 @@ def parse_file(d, styleid):
     """
     # Initialize output document (i.e., the chapter in a book to be written)
     my_out = None
-    para_num = len(my_doc.paragraphs)
-    j = 1
+    para_num = len(d.paragraphs)
+    j = 0
     for i in range(para_num):
-        para = my_doc.paragraphs[i]
+        para = d.paragraphs[i]
         # Split document on given style
+        if i == 0:
+            my_name = "DOCUMENT_%d.docx" % (j)
+            j += 1
+            my_out = docx.Document()
         if para.style.style_id == styleid:
             if my_out:
                 my_out.save(my_name)
