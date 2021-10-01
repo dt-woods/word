@@ -1,0 +1,8 @@
+# macos files
+.DS_Store
+
+# Python compilations
+__pycache__
+
+# Avoid this cantankerous infection
+desktop.ini
