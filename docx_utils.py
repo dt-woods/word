@@ -2,8 +2,8 @@
 #
 # docx_utils.py
 #
-# VERSION: 0.1.0
-# UPDATED: 2021-10-01
+# VERSION: 0.2.0
+# UPDATED: 2021-10-03
 #
 ##############################################################################
 # PUBLIC DOMAIN NOTICE                                                       #
@@ -32,6 +32,18 @@ import glob
 ##############################################################################
 # FUNCTIONS
 ##############################################################################
+def find_files(d, k=""):
+    """
+    Name:     find_files
+    Inputs:   - str, file path (d)
+              - str, keyword(s) in the file to search (k)
+    Outputs:  List
+    Features: Searches the given directory for word files
+    """
+    my_files = glob.glob(os.path.join(d, k))
+    return sorted(my_files)
+
+
 def find_word_files(d, k=""):
     """
     Name:     find_word_files
