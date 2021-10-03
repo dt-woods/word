@@ -5,14 +5,14 @@ A Pythonic Microsoft Word (.docx) file manager and style editor.
 
 * STATUS: Active
 * LATEST RELEASE: v.1.0.0-beta
-* LAST UPDATED: 2021-10-01
+* LAST UPDATED: 2021-10-03
 * LICENSE: Public Domain (except where otherwise noted)
 * URL: https://github.com/dt-woods/word
 
 # Summary
 The goals of this project are to produce the following utility functions to automate some of the boring stuff with MS Word (.docx) files:
 
-- [ ] Read a .docx file with generic (built-in) styles and write a copy with custom styles preserving the content (i.e., map one style to another).
+- [x] Read a .docx file with generic (built-in) styles and write a copy with custom styles preserving the content (i.e., map one style to another).
 - [x] Read a .docx file and write individual .docx files based on a user-defined breaking style (e.g., parse a book into chapter files).
 - [x] Read a list of .docx files and write into a single concatenated .docx file (e.g., merge chapters into a book).
 
