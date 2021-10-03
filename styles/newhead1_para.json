@@ -1,0 +1,29 @@
+{
+    "name": "NewHead1",
+    "type": "Paragraph",
+    "definition": {
+        "hidden": "False",
+        "priority": 0,
+        "quick_style": "True",
+        "base_style": "Heading 1",
+        "font": {
+            "all_caps": "True",
+            "color": {
+                "hex": "3C2F80"
+            },
+            "name": "Times New Roman",
+            "size": {
+                "point": 24
+            }
+        },
+        "paragraph_format": {
+            "keep_with_next": "True",
+            "space_before": {
+                "point": 0
+            },
+            "space_after": {
+                "point": 24
+            }
+        }
+    }
+}
