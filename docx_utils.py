@@ -2,7 +2,7 @@
 #
 # docx_utils.py
 #
-# VERSION: 0.2.0
+# VERSION: 1.2.0
 # UPDATED: 2021-10-03
 #
 ##############################################################################
@@ -27,6 +27,8 @@
 ##############################################################################
 import os
 import glob
+import re
+import zipfile
 
 
 ##############################################################################
@@ -43,6 +45,38 @@ def find_files(d, k=""):
     my_files = glob.glob(os.path.join(d, k))
     return sorted(my_files)
 
+
+def find_images(doc_path, doc_obj):
+    """
+    Input: - str, document file path (d)
+           - str, the whole-document blob decoded for utf-8
+
+    Attempt to read the document.part.blob to find where the in-line images
+    are located. For example, search for:
+        * <w:drawing>.*</w:drawing>
+        * <wp:inline>.*</wp:inline>
+        * <wp:docPr id="1" name="Picture 1"/>
+        * <pic:cNvPr id="0" name="Picture 3"/>
+        * <a:extLst><a:ext uri="{28A0092B-C50C-407E-A947-70E740481C1C}"
+    Find the text immediately before and after and attempt to find the
+    paragraph that has this text (or, if it's between paragraphs). Then,
+    try to unzip the .docx to find the embedded images (either by name or
+    by URI; see above). Then go back to the paragraph and add the image to
+    the run (if in-line) or add the image after the paragraph (if stand alone).
+    IN-PROGRESS
+    """
+    # Open docx and find images:
+    z = zipfile.ZipFile(d, 'r')
+    for zfile in z.filelist:
+        if 'image' in zfile.filename:
+            print(zfile.filename)
+    # From example-2.docx, we see that the three images are stored in the
+    # word/media sub-directory (i.e., image1.png, image2.png, image3.png).
+    # TODO: extract these images to binary and add them to the document.
+    #
+    # Find where to put them
+    my_blob = doc_obj.part.blob.decode('utf-8')
+    # TODO: find images within the blob (maybe xml tree?)
 
 def find_word_files(d, k=""):
     """
