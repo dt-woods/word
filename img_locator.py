@@ -4,7 +4,39 @@
 #
 # Tyler W. Davis
 #
-# Searches a document.xml for associated paragraphs that contain an image.
+# Searches a document.xml and document.xml.rel within a .docx file for the
+# associated paragraphs that contain an image and the related image path
+# within the .docx (e.g., /media/image1.png)
+#
+# TODO:
+# - create a function that returns the paragraph number (index from 0),
+#   paragraph ID (from paragraph attributes), run number (index from 0),
+#   relationship ID, and image path for each run that contains an image.
+# - also return the total number of paragraphs and total number of runs per
+#   paragraph
+#
+#  DICT = {
+#    'num_paras': int,
+#    'num_images': int,
+#    'paralist': [int, int, int],
+#    'paraIdList': ["Id1", "Id2", "Id3"],
+#    'imgList': ["/media/img1.png", "/media/img2.png", "/media/img3.png"],
+#    'imgIdList': ['Id1', "Id2", "Id3"],
+#    'paras': {
+#       0: {
+#         'paraId': 'ID',
+#         'num_run': int,
+#         'num_images': int,
+#         'runs': {
+#            0: {
+#              'imgID': "ID",
+#              'imgPath': "Path"
+#            }
+#         }
+#       }
+#    }
+#  }
+#
 #
 ##############################################################################
 # IMPORT NECESSARY MODULES
@@ -14,6 +46,35 @@ import re
 from zipfile import ZipFile
 import xml.etree.ElementTree as ElementTree
 
+##############################################################################
+# FUNCTIONS
+##############################################################################
+def open_docxml(doc_path, isrel=False):
+    """
+    Name:     open_docxml
+    Inputs:   - str, path to a valid .docx file
+              - bool, whether to search for the document.xml.rel
+    Returns:  str, XML of the file's contents
+    Features: Returns the XML from the document.xml within a .docx as a string
+    """
+    my_doc = ""
+    my_xml = ""
+    my_zip = None
+    if os.path.isfile(doc_path):
+        my_zip = ZipFile(doc_path, 'r')
+        for zc in my_zip.namelist():
+            if isrel:
+                if "document.xml" in zc and zc.endswith('rels'):
+                    my_doc = zc
+            else:
+                if "document.xml" in zc and not zc.endswith('rels'):
+                    my_doc = zc
+    if my_doc != "" and my_zip:
+        with my_zip.open(my_doc) as f:
+            for d in f:
+                my_xml = "".join([my_xml, d.decode("utf-8")])
+    return my_xml
+
 
 ##############################################################################
 # MAIN
@@ -21,52 +82,34 @@ import xml.etree.ElementTree as ElementTree
 docx_file = "example-2.docx"
 docx_path = os.path.join("examples", docx_file)
 
-# Find the XML document in the zip file:
-my_zip = ZipFile(docx_path, 'r')
-my_doc = ""
-my_rel = ""
-for zc in my_zip.namelist():
-    if "document.xml" in zc and not zc.endswith('rels'):
-        my_doc = zc
-    if "document.xml" in zc and zc.endswith('rels'):
-        my_rel = zc
-
-# Read the XML to a string
-if my_doc != "":
-    my_xml = ""
-    with my_zip.open(my_doc) as f:
-        for d in f.readlines():
-            my_xml = "".join([my_xml, d.decode("utf-8")])
-
-if my_rel != "":
-    rel_xml = ""
-    with my_zip.open(my_rel) as f:
-        for d in f:
-            rel_xml = "".join([rel_xml, d.decode("utf-8")])
+# Get xml content for document.xml
+doc_xml = open_docxml(docx_path)
+rel_xml = open_docxml(docx_path, True)
 
 # Parse the XML
-my_root = ElementTree.fromstring(my_xml)
+doc_root = ElementTree.fromstring(doc_xml)
 rel_root = ElementTree.fromstring(rel_xml)
 
 # Get namespaces
-my_ns = re.findall(r'xmlns:(\S+)="(\S+)"', my_xml)
 ns_dict = {}
+my_ns = re.findall(r'xmlns:(\S+)="(\S+)"', doc_xml)
 for ns in my_ns:
     k, v = ns
     ns_dict[k] = v
 
 # Find the image reference IDs:
-my_blips = re.findall('a:blip r:embed="(\S+)"', my_xml)
+# >>> Finds three in example-2.docx
+my_blips = re.findall('a:blip r:embed="(\S+)"', doc_xml)
 
 # Find the images associated with the IDs
-# >>> TODO: match 'v' for 'Id' if in my_blips
+# >>> Finds the same three IDs in document.xml (example-2.docx)
 for my_rel in rel_root:
     for k, v in my_rel.attrib.items():
-        if k == "Id":
+        if k == "Id" and v in my_blips:
             print(v)
 
 # Find and count paragraphs:
-my_paras = my_root[0].findall("w:p", ns_dict)
+my_paras = doc_root[0].findall("w:p", ns_dict)
 num_paras = len(my_paras)
 
 # Find and count runs, save them based on their paragraph ID:
