@@ -23,8 +23,7 @@ A lower priority is to create supplemental utility functions that:
 
 See separate issues for more details.
 
-This project makes use of the `python-docx`, a Python API for Microsoft Word .docx files.
-This [documentation][pydocx-doc] and [repository][pydocx-rep] are licensed and copyrighted by [Scanny][scanny] using the [MIT license][pydocx-lic].
+This project makes use of the `python-docx`, a Python API for Microsoft Word .docx files, with [documentation][pydocx-doc] and [repository][pydocx-rep] that are licensed and copyrighted by [Scanny][scanny] using the [MIT license][pydocx-lic].
 
 [pydocx-doc]: https://python-docx.readthedocs.io/en/latest/#
 [pydocx-lic]: https://github.com/python-openxml/python-docx/blob/master/LICENSE
