@@ -8,6 +8,11 @@
 # associated paragraphs that contain an image and the related image path
 # within the .docx (e.g., /media/image1.png)
 #
+#
+# TODO: create a "get_image" function that unzips an image from the .docx
+#       and puts it in the temporary directory, and returns the path to the
+#       extracted image; to be used in Python's docx run.add_picture()
+#
 ##############################################################################
 # IMPORT NECESSARY MODULES
 ##############################################################################
@@ -276,7 +281,9 @@ def search_for_attr(my_et, my_attr, is_found=False):
 # MAIN
 ##############################################################################
 if __name__ == '__main__':
+    import json
     docx_file = "example-2.docx"
     docx_path = os.path.join("examples", docx_file)
     dp = DocxPics(docx_path)
-    print(dp.paras)
+    #print(json.dumps(dp.paras, sort_keys=True, indent=2))
+    print(json.dumps(dp.imagemap, indent=2))
