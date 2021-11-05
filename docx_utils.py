@@ -2,8 +2,8 @@
 #
 # docx_utils.py
 #
-# VERSION: 1.2.0
-# UPDATED: 2021-10-03
+# VERSION: 1.2.1
+# UPDATED: 2021-11-05
 #
 ##############################################################################
 # PUBLIC DOMAIN NOTICE                                                       #
@@ -118,21 +118,29 @@ def match_char_style(a, b):
     Inputs:   - docx.text.run.Run, run from original document (a)
               - docx.text.run.Run, run for new document (b)
     Outputs:  None
-    Features: Edits a run object with the same font styles
-    TODO:     - go into the font setting of the paragraph run and match at
-                this level (see references)
+    Features: Edits a run object with the same font styles, including:
+              - bold, italic, underline
+              - all_caps, small_caps, strike, double_strike, outline,
+              - superscript, subscript
+    TODO:     - does not handle color, highlight color, or size
 
     References:
     - https://python-docx.readthedocs.io/en/latest/api/text.html#font-objects
     """
-    # First pass, just match "bold," "italic," and "underline" at run-level
-    if a.bold:
-        b.bold = True
-    if a.italic:
-        b.italic = True
-    if a.underline:
-        b.underline = True
-
+    # Second pass, go into the font styles
+    # grab all settable properties from font class,
+    # extract the value (allow AttributeError to pass)
+    # use execute to set a's parameter value to b
+    properties = [i for i in dir(a.font) if not i.startswith("_")]
+    for p in properties:
+        try:
+            v = eval("a.font.{}".format(p))
+        except AttributeError:
+            pass
+        else:
+            if isinstance(v, bool):
+                exec("b.font.{} = {}".format(p, v))
+    #
 
 def match_sect_properties(a, b):
     """
