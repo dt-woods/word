@@ -87,8 +87,8 @@ def parse_file(d, styleid):
 # MAIN
 ##############################################################################
 # User inputs:
-my_dir = "examples"   # where to look for the input document
-my_key = "example"    # keyword for finding the right input document
+my_dir = "examples"     # where to look for the input document
+my_key = "example-1"    # keyword for finding the right input document
 br_style = "Heading1" # the paragraph style used to parse the input document
 
 # Step 1: find the input word files
