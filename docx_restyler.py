@@ -2,8 +2,9 @@
 #
 # docx_restyler.py
 #
-# VERSION: 1.0.0
-# UPDATED: 2021-10-03
+# VERSION: 2.0.0
+# UPDATED: 2021-11-07
+#
 #
 ##############################################################################
 # PUBLIC DOMAIN NOTICE                                                       #
@@ -48,8 +49,8 @@ from docx_utils import match_sect_properties
 ##############################################################################
 def add_custom_para_style(d, sname, sloc = 'styles'):
     """
-    Name:     add_custom_style
-    Inputs:   - docx.document.Document, new document object (d)
+    Name:     add_custom_para_style
+    Inputs:   - docx.document.Document, docx document object (d)
               - str, unique custom style name (sname)
               - str, directory for style definitions (sloc)
     Outputs:  None
@@ -74,14 +75,13 @@ def add_custom_para_style(d, sname, sloc = 'styles'):
         return 1
 
 
-def copy_file(orig_doc, new_doc, st_map):
+def apply_style(orig_doc, st_map):
     """
-    Name:     copy_file
+    Name:     apply_style
     Inputs:   - docx.document.Document, the original document (orig_doc)
-              - docx.document.Document, copy of original document (new_doc)
               - dict, style map (st_map)
     Outputs:  None.
-    Features: Copies a document and applies new styles
+    Features: Applies new styles
     Depends:  - match_char_style
               - match_sect_properties
     TODO:     _ Add a section break paragraph style (if one) so as to
@@ -90,12 +90,6 @@ def copy_file(orig_doc, new_doc, st_map):
     num_sect = len(orig_doc.sections)
     num_para = len(orig_doc.paragraphs)
     print("Copying {} sections and {} paragraphs.".format(num_sect, num_para))
-
-    # Match the first section properties:
-    out_sect = new_doc.sections[0]
-    mat_sect = orig_doc.sections[0]
-    match_sect_properties(mat_sect, out_sect)
-    # TODO: match subsequent section properties (needs a style or keyword)
 
     # Iterate over original document
     for para in orig_doc.paragraphs:
@@ -109,10 +103,7 @@ def copy_file(orig_doc, new_doc, st_map):
             # If not mapped, use the original
             new_style = pstyle_name
 
-        out_p = new_doc.add_paragraph(text="", style=new_style)
-        for p_run in para.runs:
-            out_r = out_p.add_run(text=p_run.text, style=p_run.style.name)
-            match_char_style(p_run, out_r)
+        para.style = new_style
 
 
 def lookup_style(sname, sloc = 'styles'):
@@ -277,16 +268,15 @@ for my_file in my_files:
     )
     # Open existing and new empty docx objects
     my_doc = docx.Document(my_file)
-    out_doc = docx.Document()
 
     # Add custom styles to new docx object
     for new_style in style_map.values():
-        add_custom_para_style(out_doc, new_style)
+        add_custom_para_style(my_doc, new_style)
 
     # TODO: add custom next_paragraph_styles after all new styles are defined.
 
     # Copy old file content to new file, but use new styles.
-    copy_file(my_doc, out_doc, style_map)
+    apply_style(my_doc, style_map)
 
     # Save the copy
-    out_doc.save(out_file)
+    my_doc.save(out_file)
