@@ -28,6 +28,7 @@
 ##############################################################################
 import json
 import os
+import re
 import warnings
 
 import docx
@@ -103,7 +104,10 @@ def apply_style(orig_doc, st_map):
             # If not mapped, use the original
             new_style = pstyle_name
 
-        para.style = new_style
+        if new_style in orig_doc.styles:
+            para.style = new_style
+        else:
+            print("Style {} undefined; using original".format(new_style))
 
 
 def lookup_style(sname, sloc = 'styles'):
@@ -113,7 +117,9 @@ def lookup_style(sname, sloc = 'styles'):
               - str, directory for style definitions (sloc)
     Features: Checks a directory for a given style definition file
     """
-    my_styles = find_files(sloc, "{}*".format(sname.lower()))
+    r = re.compile(" ")
+    style_name = r.sub("_", sname.lower())
+    my_styles = find_files(sloc, "{}*".format(style_name))
     num_styles = len(my_styles)
     if num_styles == 0 or num_styles > 1:
         warnings.warn("Found {} style matches!".format(num_styles))
@@ -256,8 +262,8 @@ my_key = "example-1.docx"    # keyword for finding the right input document
 
 # Define the old-to-new style mapping:
 style_map = {
-    'Heading1': 'NewHead1',
-    'Normal': "NewNormal"
+    'Heading1': 'New Head1',
+    'Normal': "New Normal"
 }
 
 my_files = find_files(my_dir, my_key)
