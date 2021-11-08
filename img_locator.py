@@ -29,7 +29,7 @@ class DocxPics(object):
     """
     Name:     DocxPics
     Features: Class for organizing references to images found within a .docx
-    History:  Version 0
+    History:  Version 1
     """
     # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     # Class Initialization

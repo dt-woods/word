@@ -2,8 +2,8 @@
 #
 # docx_utils.py
 #
-# VERSION: 1.2.1
-# UPDATED: 2021-11-05
+# VERSION: 2.0.0
+# UPDATED: 2021-11-07
 #
 ##############################################################################
 # PUBLIC DOMAIN NOTICE                                                       #
@@ -28,7 +28,203 @@
 import os
 import glob
 import re
-import zipfile
+from zipfile import ZipFile
+import xml.etree.ElementTree as ElementTree
+
+
+##############################################################################
+# CLASSES
+##############################################################################
+class DocxPics(object):
+    """
+    Name:     DocxPics
+    Features: Class for organizing references to images found within a .docx
+    History:  Version 1
+    """
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    # Class Initialization
+    # ////////////////////////////////////////////////////////////////////////
+    def __init__(self, doc_path):
+        """
+        Name:     DocxPics.__init__
+        Inputs:   str, path to a docx document
+        Features: Initializes the DocxPics class
+        """
+        # Initialize the class parameters
+        self.num_paras = 0     # number of paragraphs in .docx
+        self.num_images = 0    # number of images in .docx
+        self.paralist = []     # list of paragraph indices containing an image
+        self.paraIdList = []   # the paraIds associated with paragraphs above
+        self.paras = {}        # dictionary containing paragraph information
+        self.xml = None        # documant.xml as string
+        self.xmlet = None      # ElementTree of document.xml
+        self.rel = None        # document.xml.rel as string
+        self.relet = None      # ElementTree of document.xml.rel
+        self.namespace = {}    # namespace dictionary
+        self.imagemap = {}     # map between relationship IDs and image paths
+        self.imID = None       # temporary image ID
+
+        # Check that input document is valid
+        if os.path.isfile(doc_path):
+            self.docx = doc_path
+            self.open_docxml()
+            self.get_docx_namespace()
+            self.find_images()
+        else:
+            self.docx = None
+            raise OSError("File %s does not exist!" % (doc_path))
+
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    # Class Function Definitions
+    # ////////////////////////////////////////////////////////////////////////
+    def find_images(self):
+        """
+        Name:     DocxPics.count_paragraphs
+        Inputs:   None
+        Outputs:  None
+        Features: Finds and counts paragraphs, runs, and images in .docx
+        Depends:  - map_images
+                  - search_for_attr
+        """
+        self.map_images()
+        self.paralist = []
+        self.paraIdList = []
+        self.paras = {}
+        self.num_images = 0
+        if self.xmlet:
+            my_paras = self.xmlet[0].findall("w:p", self.namespace)
+            self.num_paras = len(my_paras)
+            for i in range(self.num_paras):
+                para = my_paras[i]
+                # Get paragraph ID:
+                para_id = ''
+                for k, v in para.attrib.items():
+                    if 'paraId' in k:
+                        para_id = v
+
+                # Find all runs in paragraph
+                runs = para.findall("w:r", self.namespace)
+                num_runs = len(runs)
+                for j in range(num_runs):
+                    run = runs[j]
+                    draws = run.findall("w:drawing", self.namespace)
+                    num_draws = len(draws)
+                    self.num_images += num_draws
+                    if num_draws > 0:
+                        self.paralist.append(i)
+                        self.paraIdList.append(para_id)
+                        for draw in draws:
+                            self.imID = None
+                            self.search_for_attr(draw, 'embed')
+                            draw_path = ""
+                            if self.imID in self.imagemap.keys():
+                                draw_path = self.imagemap[self.imID]
+                            if i in self.paras.keys():
+                                self.paras[i]['num_images'] += 1
+                                self.paras[i]['runs'][j] = {
+                                    'imgID': str(self.imID),
+                                    "imgPath": draw_path
+                                }
+                            else:
+                                self.paras[i] = {
+                                    'paraId': para_id,
+                                    'num_run': num_runs,
+                                    'num_images': 1,
+                                    'runs': {
+                                        j: {
+                                            'imgID': str(self.imID),
+                                            'imgPath': draw_path
+                                        }
+                                    }
+                                }
+
+    def get_docx_namespace(self):
+        """
+        Name:     DocxPics.get_docx_namespace
+        Inputs:   None
+        Returns:  None
+        Features: Creates a dictionary of namespaces from an .docx XML
+        """
+        if self.xml:
+            self.namespace = {}
+            my_ns = re.findall(r'xmlns:(\S+)="(\S+)"', self.xml)
+            for ns in my_ns:
+                k, v = ns
+                self.namespace[k] = v
+
+    def map_images(self):
+        """
+        Name:     DocxPics.map_images
+        Inputs:   None
+        Outputs:  None
+        Features: Maps image relationship IDs to their paths within .docx
+        Depends:  re
+        """
+        self.imagemap = {}
+        if self.xml:
+            my_blips = re.findall('a:blip r:embed="(\S+)"', self.xml)
+            for my_rel in self.relet:
+                is_img = False
+                img_id = ""
+                img_path = ""
+                for k, v in my_rel.attrib.items():
+                    if k == "Id" and v in my_blips:
+                        is_img = True
+                        img_id = v
+                if is_img:
+                    img_path = my_rel.attrib['Target']
+                    self.imagemap[img_id] = img_path
+
+    def open_docxml(self):
+        """
+        Name:     DocxPics.open_docxml
+        Inputs:   None
+        Returns:  None
+        Features: Reads the XML from document.xml within a .docx and creates
+                  ElementTree objects from string
+        Depends:  - ElementTree
+                  - zipfile.ZipFile
+        """
+        self.xml = ""
+        self.rel = ""
+        if self.docx:
+            my_doc = ""
+            my_rel = ""
+            my_zip = ZipFile(self.docx, 'r')
+            for zc in my_zip.namelist():
+                if "document.xml" in zc and zc.endswith('rels'):
+                    my_rel = zc
+                if "document.xml" in zc and not zc.endswith('rels'):
+                    my_doc = zc
+
+            if my_doc != "":
+                with my_zip.open(my_doc) as f:
+                    for d in f:
+                        self.xml = "".join([self.xml, d.decode("utf-8")])
+                self.xmlet = ElementTree.fromstring(self.xml)
+
+            if my_rel != "":
+                with my_zip.open(my_rel) as f:
+                    for d in f:
+                        self.rel = "".join([self.rel, d.decode("utf-8")])
+                self.relet = ElementTree.fromstring(self.rel)
+
+    def search_for_attr(self, my_et, my_attr, is_found=False):
+        """
+        Name:     DocxPics.search_for_attr
+        Inputs:   - xml.etree.ElementTree.Element
+                  - str, attribute name (my_attr)
+                  - bool, if attribute has been found
+        Outputs:  str, value of the search attribute
+        Features: Recursive search of ET until element is found with attribute
+        """
+        if not is_found:
+            for child in my_et:
+                for k, v in child.attrib.items():
+                    if my_attr in k:
+                        is_found = True
+                        self.imID = v
+                self.search_for_attr(child, my_attr, is_found)
 
 
 ##############################################################################
@@ -45,38 +241,6 @@ def find_files(d, k=""):
     my_files = glob.glob(os.path.join(d, k))
     return sorted(my_files)
 
-
-def find_images(doc_path, doc_obj):
-    """
-    Input: - str, document file path (d)
-           - str, the whole-document blob decoded for utf-8
-
-    Attempt to read the document.part.blob to find where the in-line images
-    are located. For example, search for:
-        * <w:drawing>.*</w:drawing>
-        * <wp:inline>.*</wp:inline>
-        * <wp:docPr id="1" name="Picture 1"/>
-        * <pic:cNvPr id="0" name="Picture 3"/>
-        * <a:extLst><a:ext uri="{28A0092B-C50C-407E-A947-70E740481C1C}"
-    Find the text immediately before and after and attempt to find the
-    paragraph that has this text (or, if it's between paragraphs). Then,
-    try to unzip the .docx to find the embedded images (either by name or
-    by URI; see above). Then go back to the paragraph and add the image to
-    the run (if in-line) or add the image after the paragraph (if stand alone).
-    IN-PROGRESS
-    """
-    # Open docx and find images:
-    z = zipfile.ZipFile(d, 'r')
-    for zfile in z.filelist:
-        if 'image' in zfile.filename:
-            print(zfile.filename)
-    # From example-2.docx, we see that the three images are stored in the
-    # word/media sub-directory (i.e., image1.png, image2.png, image3.png).
-    # TODO: extract these images to binary and add them to the document.
-    #
-    # Find where to put them
-    my_blob = doc_obj.part.blob.decode('utf-8')
-    # TODO: find images within the blob (maybe xml tree?)
 
 def find_word_files(d, k=""):
     """
@@ -140,7 +304,7 @@ def match_char_style(a, b):
         else:
             if isinstance(v, bool):
                 exec("b.font.{} = {}".format(p, v))
-    #
+
 
 def match_sect_properties(a, b):
     """
