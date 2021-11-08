@@ -1,0 +1,27 @@
+{
+    "name": "NewNormal",
+    "type": "Paragraph",
+    "definition": {
+        "hidden": "False",
+        "priority": 0,
+        "quick_style": "True",
+        "base_style": "Normal",
+        "font": {
+            "name": "Arial",
+            "size": {
+                "point": 12
+            }
+        },
+        "paragraph_format": {
+            "line_spacing": {
+                "value": 1.15
+            },
+            "space_before": {
+                "point": 6
+            },
+            "space_after": {
+                "point": 9
+            }
+        }
+    }
+}

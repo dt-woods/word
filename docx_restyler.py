@@ -257,6 +257,7 @@ my_key = "example-1.docx"    # keyword for finding the right input document
 # Define the old-to-new style mapping:
 style_map = {
     'Heading1': 'NewHead1',
+    'Normal': "NewNormal"
 }
 
 my_files = find_files(my_dir, my_key)
