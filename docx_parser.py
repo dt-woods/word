@@ -2,8 +2,8 @@
 #
 # docx_parser.py
 #
-# VERSION: 1.3.1
-# UPDATED: 2021-10-03
+# VERSION: 2.0.0
+# UPDATED: 2021-11-24
 #
 ##############################################################################
 # PUBLIC DOMAIN NOTICE                                                       #
@@ -29,58 +29,49 @@ import docx
 
 from docx_utils import find_word_files
 from docx_utils import list_paragraph_styles
-from docx_utils import match_char_style
-from docx_utils import match_sect_properties
 
 
 ##############################################################################
 # FUNCTIONS
 ##############################################################################
-def parse_file(d, styleid):
+def delete_paragraph(paragraph):
+    """
+    Ref: abdul mutal (StackOverflow)
+    https://stackoverflow.com/a/61336056
+    """
+    p = paragraph._element
+    p.getparent().remove(p)
+    p._p = p._element = None
+
+
+def parse_file(doc, style, idx):
     """
     Name:     parse_file
-    Inputs:   - docx.document.Document, an open Word document (d)
-              - str, the Word paragraph style ID to break on (styleid)
+    Inputs:   - str, file path to .docx (doc)
+              - str, the .docx paragraph style ID to break on (style)
+              - int, the index of style ID to parse; zero indexed (idx)
     Features: Finds paragraphs of the given style and breaks it into a
-              separate document, preserving character formats (e.g., bold)
-              and document properties (e.g., margins). There is no known way
-              to match a paragraph to its section, which a known issue.
-    TODO:     - include a user-defined output folder option
-              - include a user-defined output file naming scheme
+              separate document.
+    Depends:  delete_paragraph
     """
-    # Initialize output document (i.e., the chapter in a book to be written)
-    my_out = None
+    d = docx.Document(my_file)
     para_num = len(d.paragraphs)
-    j = 0
-    for i in range(para_num):
-        para = d.paragraphs[i]
-        # Split document on given style
-        if i == 0:
-            my_name = "DOCUMENT_%d.docx" % (j)
+    j = 0      # track paragraphs with matching styles
+    f = False  # track all paragraphs between matching styles
+    for para in d.paragraphs:
+        if para.style.style_id == style:
+            if j == idx:
+                f = True
+            else:
+                f = False
+                delete_paragraph(para)
             j += 1
-            my_out = docx.Document()
-            out_s = my_out.sections[0]
-            match_sect_properties(d.sections[0], out_s)
-        if para.style.style_id == styleid:
-            if my_out:
-                my_out.save(my_name)
-            my_name = "DOCUMENT_%d.docx" % (j)
-            j += 1
-            my_out = docx.Document()
-            out_s = my_out.sections[0]
-            # Assumes no changes in section properties
-            # (i.e., paragraph i section properties are all the same)
-            match_sect_properties(d.sections[0], out_s)
-        if my_out:
-            # Create a new empty paragraph, then iterate over paragraph runs
-            # NOTE: every paragraph has at least one run
-            out_p = my_out.add_paragraph(text="", style=para.style.name)
-            for p_run in para.runs:
-                out_r = out_p.add_run(
-                    text = p_run.text, style = p_run.style.name)
-                match_char_style(p_run, out_r)
+        elif not f:
+            delete_paragraph(para)
+
     # Save the last chapter
-    my_out.save(my_name)
+    out_name = "DOCUMENT-%d.docx" % (idx)
+    d.save(out_name)
 
 
 ##############################################################################
@@ -91,7 +82,7 @@ my_dir = "examples"     # where to look for the input document
 my_key = "example-1"    # keyword for finding the right input document
 br_style = "Heading1" # the paragraph style used to parse the input document
 
-# Step 1: find the input word files
+# Step 1: find the input word file(s)
 my_files = find_word_files(my_dir, my_key)
 if len(my_files) == 1:
     my_file = my_files[0]
@@ -102,9 +93,11 @@ else:
     print("Failed to find docx. Please check and try again.")
     my_file = None
 
-# Step 2 - Open the document, define break style, and parse
 if my_file:
+    # Step 2 - Find all styles and see if break style is there
     my_doc = docx.Document(my_file)
     my_styles = list_paragraph_styles(my_doc)
     if br_style in my_styles.keys():
-        parse_file(my_doc, br_style)
+        # Step 3 - For each break style, parse:
+        for i in range(my_styles[br_style]['count']):
+            parse_file(my_file, br_style, i)
