@@ -27,6 +27,7 @@
 ##############################################################################
 import docx
 
+from docx_utils import delete_paragraph
 from docx_utils import find_word_files
 from docx_utils import list_paragraph_styles
 
@@ -34,16 +35,6 @@ from docx_utils import list_paragraph_styles
 ##############################################################################
 # FUNCTIONS
 ##############################################################################
-def delete_paragraph(paragraph):
-    """
-    Ref: abdul mutal (StackOverflow)
-    https://stackoverflow.com/a/61336056
-    """
-    p = paragraph._element
-    p.getparent().remove(p)
-    p._p = p._element = None
-
-
 def parse_file(doc, style, idx):
     """
     Name:     parse_file
@@ -77,27 +68,28 @@ def parse_file(doc, style, idx):
 ##############################################################################
 # MAIN
 ##############################################################################
-# User inputs:
-my_dir = "examples"     # where to look for the input document
-my_key = "example-1"    # keyword for finding the right input document
-br_style = "Heading1" # the paragraph style used to parse the input document
+if __name__ == '__main__':
+    # User inputs:
+    my_dir = "examples"     # where to look for the input document
+    my_key = "example-1"    # keyword for finding the right input document
+    br_style = "Heading1" # the paragraph style used to parse the input document
 
-# Step 1: find the input word file(s)
-my_files = find_word_files(my_dir, my_key)
-if len(my_files) == 1:
-    my_file = my_files[0]
-elif len(my_files) > 1:
-    print("Found several word files; "
-          "please use keywords to specify the one you want.")
-else:
-    print("Failed to find docx. Please check and try again.")
-    my_file = None
+    # Step 1: find the input word file(s)
+    my_files = find_word_files(my_dir, my_key)
+    if len(my_files) == 1:
+        my_file = my_files[0]
+    elif len(my_files) > 1:
+        print("Found several word files; "
+              "please use keywords to specify the one you want.")
+    else:
+        print("Failed to find docx. Please check and try again.")
+        my_file = None
 
-if my_file:
-    # Step 2 - Find all styles and see if break style is there
-    my_doc = docx.Document(my_file)
-    my_styles = list_paragraph_styles(my_doc)
-    if br_style in my_styles.keys():
-        # Step 3 - For each break style, parse:
-        for i in range(my_styles[br_style]['count']):
-            parse_file(my_file, br_style, i)
+    if my_file:
+        # Step 2 - Find all styles and see if break style is there
+        my_doc = docx.Document(my_file)
+        my_styles = list_paragraph_styles(my_doc)
+        if br_style in my_styles.keys():
+            # Step 3 - For each break style, parse:
+            for i in range(my_styles[br_style]['count']):
+                parse_file(my_file, br_style, i)

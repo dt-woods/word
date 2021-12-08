@@ -3,7 +3,7 @@
 # docx_utils.py
 #
 # VERSION: 2.0.0
-# UPDATED: 2021-11-07
+# UPDATED: 2021-12-08
 #
 ##############################################################################
 # PUBLIC DOMAIN NOTICE                                                       #
@@ -230,6 +230,16 @@ class DocxPics(object):
 ##############################################################################
 # FUNCTIONS
 ##############################################################################
+def delete_paragraph(paragraph):
+    """
+    Ref: abdul mutal (StackOverflow)
+    https://stackoverflow.com/a/61336056
+    """
+    p = paragraph._element
+    p.getparent().remove(p)
+    p._p = p._element = None
+
+
 def find_files(d, k=""):
     """
     Name:     find_files
