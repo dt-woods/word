@@ -33,6 +33,7 @@ import os
 import docx
 from docx.enum.section import WD_SECTION
 
+from docx_utils import delete_paragraph
 from docx_utils import find_word_files
 from docx_utils import match_char_style
 from docx_utils import match_sect_properties
@@ -85,20 +86,54 @@ def merge_files(d_list, sbreak):
 ##############################################################################
 # MAIN
 ##############################################################################
-# User inputs:
-my_dir = "."            # where to look for the input document
-my_key = "DOCUMENT_"    # keyword for finding the right input document
-sect_break = WD_SECTION.NEW_PAGE   # section break type between merged files
-out_file = "{}_ALL.docx".format(my_key.rstrip("_"))
+#if __name__ == '__main__':
+    # User inputs:
+    my_dir = "."            # where to look for the input document
+    my_key = "DOCUMENT_"    # keyword for finding the right input document
+    sect_break = WD_SECTION.NEW_PAGE   # section break type between merged files
+    out_file = "{}_ALL.docx".format(my_key.rstrip("_"))
 
-# Step 1: find the input word files
-my_files = find_word_files(my_dir, my_key)
-num_files = len(my_files)
-if num_files == 0:
-    print("Failed to find any files. "
-          "Please update path and keywords and try again.")
-else:
-    cat_doc = merge_files(my_files, sect_break)
-    if os.path.isfile(out_file):
-        print("Warning: overwriting existing output file!")
-    cat_doc.save(out_file)
+    # Step 1: find the input word files
+    my_files = find_word_files(my_dir, my_key)
+    num_files = len(my_files)
+    if num_files == 0:
+        print("Failed to find any files. "
+              "Please update path and keywords and try again.")
+    else:
+        cat_doc = merge_files(my_files, sect_break)
+        if os.path.isfile(out_file):
+            print("Warning: overwriting existing output file!")
+        cat_doc.save(out_file)
+
+
+##############################################################################
+# SANDBOX
+##############################################################################
+# Testing grounds for new development
+# STATUS: in-progress
+if False:
+    # User inputs:
+    my_dir = "."
+    my_key = "."
+    sect_break = WD_SECTION.NEW_PAGE
+
+    # Step 1: find the input word files
+    my_files = find_word_files(my_dir, my_key)
+    num_files = len(my_files)
+
+    templates = find_word_files(my_dir, "template")
+    template = templates[0]
+
+    out_doc = docx.Document(template)
+    for para in out_doc.paragraphs:
+        delete_paragraph(para)
+
+    # REf: https://github.com/python-openxml/python-docx/issues/368
+    # BUG - this does not copy images or tables
+    for my_file in my_files:
+        temp_doc = docx.Document(my_file)
+        for element in temp_doc.element.body:
+            out_doc.element.body.append(element)
+        out_doc.add_section(sect_break)
+
+    out_doc.save("MERGED_DOCUMENT.docx")
