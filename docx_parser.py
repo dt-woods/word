@@ -3,7 +3,7 @@
 # docx_parser.py
 #
 # VERSION: 2.0.0
-# UPDATED: 2021-11-24
+# UPDATED: 2021-12-20
 #
 ##############################################################################
 # PUBLIC DOMAIN NOTICE                                                       #
@@ -35,6 +35,14 @@ from docx_utils import list_paragraph_styles
 ##############################################################################
 # FUNCTIONS
 ##############################################################################
+def get_title(text):
+    """
+    TODO: create a specialized method of handing text from break styles
+    to return a title for the output file.
+    """
+    return "%s.docx" % text.replace(" ", "_")
+
+
 def parse_file(doc, style, idx):
     """
     Name:     parse_file
@@ -43,9 +51,11 @@ def parse_file(doc, style, idx):
               - int, the index of style ID to parse; zero indexed (idx)
     Features: Finds paragraphs of the given style and breaks it into a
               separate document.
-    Depends:  delete_paragraph
+    Depends:  - delete_paragraph
+              - get_title
     """
-    d = docx.Document(my_file)
+    d = docx.Document(doc)
+    out_name = None
     para_num = len(d.paragraphs)
     j = 0      # track paragraphs with matching styles
     f = False  # track all paragraphs between matching styles
@@ -53,6 +63,7 @@ def parse_file(doc, style, idx):
         if para.style.style_id == style:
             if j == idx:
                 f = True
+                out_name = get_title(para.text)
             else:
                 f = False
                 delete_paragraph(para)
@@ -60,8 +71,8 @@ def parse_file(doc, style, idx):
         elif not f:
             delete_paragraph(para)
 
-    # Save the last chapter
-    out_name = "DOCUMENT-%d.docx" % (idx)
+    if out_name is None:
+        out_name = "DOCUMENT-%d.docx" % (idx)
     d.save(out_name)
 
 
